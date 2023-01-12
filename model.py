@@ -5,6 +5,7 @@ import torch.nn.functional as F
 from torch import optim
 from torch.optim.lr_scheduler import StepLR
 from torch.utils.data import DataLoader
+import torchvision.transforms as transforms
 
 from torchvision import utils
 import matplotlib.pyplot as plt
@@ -23,18 +24,20 @@ from torch.utils.data import Dataset
 class CustomDataset(Dataset):
     def __init__(self, X, Y):
         self.x = torch.from_numpy(X)
-        self.y = torch.from_numpy(Y)
+        self.y = torch.argmax(torch.from_numpy(Y), dim=-1)
+        # print(f"y_data: {self.y}, y_shape: {self.y.shape}")
         
     def __len__(self):
         return len(self.x)
     
     def __getitem__(self, index) :
         
-        data = self.x[index].view([2,1024,-1])
-        print(f"data : {data.size()}")
+        data = self.x[index].unsqueeze(0).transpose(-1,0)
+        # data = self.x[index].view([2,1024,-1])
+        # print(f"data : {data.size()}")
         label = self.y[index]
-        print(f"class label : {torch.argmax(label)}")
-        print(f"data : {label.size()}")
+        # print(f"class label : {torch.argmax(label, dim=-1)}")
+        # print(f"label : {label.shape}")
         
         return data, label
 
@@ -145,9 +148,9 @@ class ResNet(nn.Module):
         output = self.conv5_x(output)
         output = self.avgpool(output)
         output = output.view(output.size(0), -1)
-        print(output.size)
+        # print(output.size)
         output = self.fc(output)
-        print(output.size())
+        # print(output.size())
         
         return output
     
@@ -177,11 +180,11 @@ def get_lr(opt):
         
 def metric_batch(output, target):
     pred = output.argmax(1, keepdim=True)
-    corrects = pred.eq(target.view_as(pred)).sum.item()
+    corrects = pred.eq(target.view_as(pred)).sum().item()
     return corrects
 
 def loss_batch(loss_func, output, target, opt=None):
-    print(f"output: {output.size()}, target: {target.size()}")
+    # print(f"output: {output.size()}, target: {target.size()}")
     loss = loss_func(output, target)
     metric_b = metric_batch(output, target)
 
@@ -203,8 +206,8 @@ def loss_epoch(model, loss_func, dataset, sanity_check=False, opt=None):
         yb = yb.to(device)
         output = model(xb)
         
-        print(output.size())
-        print(yb.size())
+        # print(output.size())
+        # print(yb.size())
         
         loss_b, metric_b = loss_batch(loss_func, output, yb, opt)
 
@@ -295,13 +298,13 @@ if __name__=="__main__":
     model = Model().resnet50().to(device)
     x = torch.randn(1, 2, 224, 224).to(device)
     output = model(x)
-    print(output.size())
+    # print(output.size())
     
 
     hdf5_file = h5py.File('./2018.01\GOLD_XYZ_OSC.0001_1024.hdf5','r')
     
     modulation_classes = json.load(open('./2018.01\classes-fixed.json', 'r'))
-    print(modulation_classes)
+    # print(modulation_classes)
     
     data = hdf5_file['X']
     modulation_onehot = hdf5_file['Y']
@@ -310,7 +313,7 @@ if __name__=="__main__":
     
     idx = 0
     modulation_str = modulation_classes[int(np.argwhere(modulation_onehot[idx] == 1))]
-    print(modulation_str)
+    # print(modulation_str)
     # Prints info about the frame
     print(f"Retrieving Sample {idx}\n"
       f"\t- Modulation (raw): {modulation_onehot[idx]}\n"
@@ -338,7 +341,7 @@ if __name__=="__main__":
     
     for i in range(1, 24):
         filename = './ExtractDataset/part' +str(i) + '.h5'
-        print(filename)
+        # print(filename)
         f = h5py.File(filename, 'r')
         X = np.vstack((X,f['X'][:][idx]))
         Y = np.vstack((Y,f['Y'][:][idx]))
@@ -347,9 +350,11 @@ if __name__=="__main__":
         Z = np.vstack((Z,f['Z'][:][idx]))
         f.close()
         
-    print('X-size', X.shape)
-    print('Y-size', Y.shape)
-    print('Z-size', Z.shape)
+    # print('X-size', X.shape)
+    # print('Y-size', Y.shape)
+    # print('Z-size', Z.shape)
+    
+    
     
     X_train, X_val, Y_train, Y_val, Z_train,Z_val = train_test_split(X, Y, Z, test_size=0.2, random_state=0)
     X_train, X_test, Y_train, Y_test, Z_train, Z_test = train_test_split(X_train, Y_train, Z_train, test_size=0.1, random_state=0)
