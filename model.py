@@ -298,9 +298,9 @@ if __name__=="__main__":
     print(output.size())
     
 
-    hdf5_file = h5py.File(r'C:\Users\hbb-dextech\SOLETOP_RF\2018.01\GOLD_XYZ_OSC.0001_1024.hdf5','r')
+    hdf5_file = h5py.File('./2018.01\GOLD_XYZ_OSC.0001_1024.hdf5','r')
     
-    modulation_classes = json.load(open(r'C:\Users\hbb-dextech\SOLETOP_RF\2018.01\classes-fixed.json', 'r'))
+    modulation_classes = json.load(open('./2018.01\classes-fixed.json', 'r'))
     print(modulation_classes)
     
     data = hdf5_file['X']
@@ -328,7 +328,7 @@ if __name__=="__main__":
     
     
     
-    f = h5py.File('./soletop_dataset/ExtractDataset/part0.h5')
+    f = h5py.File('./ExtractDataset/part0.h5')
     sample_num = f["X"].shape[0]
     idx = np.random.choice(range(0,sample_num),size=106496)
     X = f['X'][:][idx]
@@ -337,7 +337,7 @@ if __name__=="__main__":
     f.close()
     
     for i in range(1, 24):
-        filename = './soletop_dataset/ExtractDataset/part' +str(i) + '.h5'
+        filename = './ExtractDataset/part' +str(i) + '.h5'
         print(filename)
         f = h5py.File(filename, 'r')
         X = np.vstack((X,f['X'][:][idx]))
@@ -385,20 +385,11 @@ if __name__=="__main__":
         'lr_scheduler':lr_scheduler,
         'path2weights':'./models/weights.pt',
     }
-    print("SDSdsdsdsd")
+    
     # create the directory that stores weights.pt
     def createFolder(directory):
         if not os.path.exists(directory):
             os.makedirs(directory)
     createFolder('./models')
-    
-    
-    
-    
-    
-    print("SDSdsdsdsd")
-    
-    
-    
     
     model, loss_hist, metric_hist = train_val(model, params_train)
