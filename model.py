@@ -17,7 +17,7 @@ import pickle as pkl
 from sklearn.preprocessing import OneHotEncoder, LabelEncoder
 from sklearn.model_selection import train_test_split
 import json
-import tqdm
+from tqdm import tqdm
 
 from torch.utils.data import Dataset
 
@@ -201,7 +201,7 @@ def loss_epoch(model, loss_func, dataset, sanity_check=False, opt=None):
     running_metric = 0.0
     len_data = len(dataset)
 
-    for xb, yb in dataset:
+    for xb, yb in tqdm(dataset, total = len_data, desc = 'epochs'):
         xb = xb.to(device)
         yb = yb.to(device)
         output = model(xb)
@@ -246,7 +246,7 @@ def train_val(model, params):
 
     start_time = time.time()
 
-    for epoch in range(num_epochs):
+    for epoch in tqdm(range(num_epochs), total = num_epochs, desc = 'epochs'):
         current_lr = get_lr(opt)
         print('Epoch {}/{}, current lr={}'.format(epoch, num_epochs-1, current_lr))
 
